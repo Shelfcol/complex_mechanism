@@ -86,6 +86,7 @@ void turn_on_robot::Cmd_Amclvel_Callback(const geometry_msgs::PoseWithCovariance
   Amclpose.position.y = Pose->pose.pose.position.y;
   Amclpose.orientation = Pose->pose.pose.orientation;
   float temp = tf::getYaw(Amclpose.orientation);
+  ROS_INFO("amcl  x=%d, y=%d, z=%d", Amclpose.position.x, Amclpose.position.y, Amclpose.position.z);
 }
 /**************************************
 Date: May 31, 2020
@@ -281,6 +282,7 @@ turn_on_robot::turn_on_robot():Sampling_Time(0),Power_voltage(0)
   odom_publisher = n.advertise<nav_msgs::Odometry>("odom", 50);//里程计数据发布，robot_pose_ekf接收
   imu_publisher  = n.advertise<sensor_msgs::Imu>("/mobile_base/sensors/imu_data", 20);//IMU数据发布，robot_pose_ekf接收
 
+  //直接由这里订阅速度和角速度信息，然后向下发送车辆的控制指令，Vx  Vy  Wz
   Cmd_Vel_Sub = n.subscribe("/cmd_vel", 100, &turn_on_robot::Cmd_Vel_Callback, this);//因为官方的平滑包只支持X和W，没有Y，所以这里不使用平滑包
  //Cmd_Vel_Sub = n.subscribe(smoother_cmd_vel, 100, &turn_on_robot::Cmd_Vel_Callback, this);//订阅smoother_cmd_vel话题并控制机器人//差速 
   Amcl_Sub = n.subscribe("/amcl_pose", 100, &turn_on_robot::Cmd_Amclvel_Callback, this);//自适应蒙特卡洛定位需要的数据

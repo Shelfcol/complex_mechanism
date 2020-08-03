@@ -2,16 +2,14 @@
   "ExpandedNodes": [
     "",
     "\\navigation",
-    "\\robot_pose_ekf\\include",
-    "\\robot_pose_ekf\\include\\robot_pose_ekf",
-    "\\slam_gmapping\\gmapping",
-    "\\slam_gmapping\\gmapping\\launch",
-    "\\slam_gmapping\\gmapping\\src",
-    "\\turn_on_wheeltec_robot",
-    "\\turn_on_wheeltec_robot\\launch",
-    "\\turn_on_wheeltec_robot\\launch\\include",
-    "\\turn_on_wheeltec_robot\\param_senior_mec_no"
+    "\\navigation\\amcl",
+    "\\navigation\\amcl\\cfg",
+    "\\navigation\\amcl\\include\\amcl",
+    "\\navigation\\amcl\\include\\amcl\\map",
+    "\\navigation\\amcl\\include\\amcl\\pf",
+    "\\navigation\\amcl\\include\\amcl\\sensors",
+    "\\navigation\\amcl\\src"
   ],
-  "SelectedNode": "\\turn_on_wheeltec_robot\\param_senior_mec_no\\costmap_common_params.yaml",
+  "SelectedNode": "\\navigation\\amcl\\cfg\\AMCL.cfg",
   "PreviewInSolutionExplorer": false
 }
