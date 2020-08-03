@@ -1,0 +1,17 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\navigation",
+    "\\robot_pose_ekf\\include",
+    "\\robot_pose_ekf\\include\\robot_pose_ekf",
+    "\\slam_gmapping\\gmapping",
+    "\\slam_gmapping\\gmapping\\launch",
+    "\\slam_gmapping\\gmapping\\src",
+    "\\turn_on_wheeltec_robot",
+    "\\turn_on_wheeltec_robot\\launch",
+    "\\turn_on_wheeltec_robot\\launch\\include",
+    "\\turn_on_wheeltec_robot\\param_senior_mec_no"
+  ],
+  "SelectedNode": "\\turn_on_wheeltec_robot\\param_senior_mec_no\\costmap_common_params.yaml",
+  "PreviewInSolutionExplorer": false
+}
