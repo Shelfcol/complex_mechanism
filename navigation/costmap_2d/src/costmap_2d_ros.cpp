@@ -99,7 +99,7 @@ Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
   std::string tf_error;
   // we need to make sure that the transform between the robot base frame and the global frame is available
   while (ros::ok()
-      && !tf_.waitForTransform(global_frame_, robot_base_frame_, ros::Time(), ros::Duration(0.1), ros::Duration(0.01),
+      && !tf_.waitForTransform(global_frame_, robot_base_frame_, ros::Time(), ros::Duration(0.2), ros::Duration(0.01),
                                &tf_error))
   {
     ros::spinOnce();
