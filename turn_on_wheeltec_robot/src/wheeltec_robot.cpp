@@ -277,8 +277,12 @@ turn_on_robot::turn_on_robot():Sampling_Time(0),Power_voltage(0)
   voltage_publisher = n.advertise<std_msgs::Float32>("/PowerVoltage", 10);//电池电压数据发布
   odom_publisher = n.advertise<nav_msgs::Odometry>("odom", 50);//里程计数据发布
   imu_publisher  = n.advertise<sensor_msgs::Imu>("/mobile_base/sensors/imu_data", 20);//IMU数据发布
+
    Cmd_Vel_Sub = n.subscribe("/cmd_vel", 100, &turn_on_robot::Cmd_Vel_Callback, this);//因为官方的平滑包只支持X和W，没有Y，所以这里不使用平滑包
   //Cmd_Vel_Sub = n.subscribe(smoother_cmd_vel, 100, &turn_on_robot::Cmd_Vel_Callback, this);//订阅smoother_cmd_vel话题并控制机器人//差速 
+
+   //Cmd_Vel_Sub = n.subscribe("/cmd_vel", 100, &turn_on_robot::Cmd_Vel_Callback, this);//因为官方的平滑包只支持X和W，没有Y，所以这里不使用平滑包
+  
   Amcl_Sub = n.subscribe("/amcl_pose", 100, &turn_on_robot::Cmd_Amclvel_Callback, this);//自适应蒙特卡洛定位需要的数据
   ROS_INFO_STREAM("Data ready");//ready显示状态
   //初始化串口
