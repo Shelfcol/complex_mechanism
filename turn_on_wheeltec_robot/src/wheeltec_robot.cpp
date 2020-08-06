@@ -38,7 +38,6 @@ float turn_on_robot::Odom_Trans(uint8_t Data_High,uint8_t Data_Low)
 /**************************************
 Date: June 29, 2020
 Function: 订阅回调函数Callback，根据订阅的指令向串口发指令控制下位机
-这是机器人的控制代码
 ***************************************/
 void turn_on_robot::Cmd_Vel_Callback(const geometry_msgs::Twist &twist_aux)
 {
@@ -86,7 +85,6 @@ void turn_on_robot::Cmd_Amclvel_Callback(const geometry_msgs::PoseWithCovariance
   Amclpose.position.y = Pose->pose.pose.position.y;
   Amclpose.orientation = Pose->pose.pose.orientation;
   float temp = tf::getYaw(Amclpose.orientation);
-  ROS_INFO("amcl  x=%d, y=%d, z=%d", Amclpose.position.x, Amclpose.position.y, Amclpose.position.z);
 }
 /**************************************
 Date: May 31, 2020
@@ -135,9 +133,9 @@ void turn_on_robot::Publish_Odom()
     odom.twist.twist.linear.y =  Robot_Vel.Y;//y方向前进速度
     odom.twist.twist.angular.z = Robot_Vel.Z;  //角速度 
     //这个矩阵有两种，分机器人静止和动起来的时候用 这是扩展卡尔曼滤波的,官网提供的2个矩阵
-    if(abs(Robot_Vel.X)<1e-5&&abs(Robot_Vel.Y)<1e-5&&abs(Robot_Vel.Z)<1e-5)//如果velocity是零，说明编码器的误差会比较小，认为编码器数据更可靠
+    if(Robot_Vel.X== 0&&Robot_Vel.Y== 0&&Robot_Vel.Z== 0)//如果velocity是零，说明编码器的误差会比较小，认为编码器数据更可靠
     memcpy(&odom.pose.covariance, odom_pose_covariance2, sizeof(odom_pose_covariance2)),
-    memcpy(&odom.twist.covariance, odom_twist_covariance2, sizeof(odom_twist_covariance2));//内存拷贝函数
+    memcpy(&odom.twist.covariance, odom_twist_covariance2, sizeof(odom_twist_covariance2));
     else//如果小车velocity非零，考虑到运动中编码器可能带来的滑动误差，认为imu的数据更可靠
     memcpy(&odom.pose.covariance, odom_pose_covariance, sizeof(odom_pose_covariance)),
     memcpy(&odom.twist.covariance, odom_twist_covariance, sizeof(odom_twist_covariance));       
@@ -200,16 +198,16 @@ bool turn_on_robot::Get_Sensor_Data()
       if (Receive_Data.rx[22] == Check_Sum(22,READ_DATA_CHECK))//校验位检测
       {
         Receive_Data.Flag_Stop=Receive_Data.rx[1];//停止位
-        Robot_Vel.X = Odom_Trans(Receive_Data.rx[2],Receive_Data.rx[3]); //获取底盘X方向速度, 这个速度应该是电机编码器解算得到的
+        Robot_Vel.X = Odom_Trans(Receive_Data.rx[2],Receive_Data.rx[3]); //获取底盘X方向速度
         Robot_Vel.Y = Odom_Trans(Receive_Data.rx[4],Receive_Data.rx[5]); //获取底盘Y方向速度//Y速度仅在全向移动机器人底盘有效
         Robot_Vel.Z = Odom_Trans(Receive_Data.rx[6],Receive_Data.rx[7]); //获取底盘Z方向速度   
-        
+        //Robot_Vel.Z = Mpu6050.angular_velocity.z
         Mpu6050_Data.accele_x_data = IMU_Trans(Receive_Data.rx[8],Receive_Data.rx[9]);//获取IMU的X轴加速度  
         Mpu6050_Data.accele_y_data = IMU_Trans(Receive_Data.rx[10],Receive_Data.rx[11]);//获取IMU的X轴加速度
         Mpu6050_Data.accele_z_data = IMU_Trans(Receive_Data.rx[12],Receive_Data.rx[13]);//获取IMU的X轴加速度
         Mpu6050_Data.gyros_x_data = IMU_Trans(Receive_Data.rx[14],Receive_Data.rx[15]);//获取IMU的X轴角速度  
-        Mpu6050_Data.gyros_y_data = IMU_Trans(Receive_Data.rx[16],Receive_Data.rx[17]);//获取IMU的Y轴角速度  
-        Mpu6050_Data.gyros_z_data = IMU_Trans(Receive_Data.rx[18],Receive_Data.rx[19]);//获取IMU的Z轴角速度  
+        Mpu6050_Data.gyros_y_data = IMU_Trans(Receive_Data.rx[16],Receive_Data.rx[17]);//获取IMU的X轴角速度  
+        Mpu6050_Data.gyros_z_data = IMU_Trans(Receive_Data.rx[18],Receive_Data.rx[19]);//获取IMU的X轴角速度  
         //线性加速度单位转化，和STM32 MPU6050初始化的时候的量程有关
         Mpu6050.linear_acceleration.x = Mpu6050_Data.accele_x_data / ACCEl_RATIO;
         Mpu6050.linear_acceleration.y = Mpu6050_Data.accele_y_data / ACCEl_RATIO;
@@ -219,7 +217,6 @@ bool turn_on_robot::Get_Sensor_Data()
         Mpu6050.angular_velocity.x =  Mpu6050_Data.gyros_x_data * GYROSCOPE_RATIO;
         Mpu6050.angular_velocity.y =  Mpu6050_Data.gyros_y_data * GYROSCOPE_RATIO;
         Mpu6050.angular_velocity.z =  Mpu6050_Data.gyros_z_data * GYROSCOPE_RATIO;
-        //Robot_Vel.Z = Mpu6050.angular_velocity.z;
         //获取电池电压
         transition_16 = 0;
         transition_16 |=  Receive_Data.rx[20]<<8;
@@ -276,15 +273,12 @@ turn_on_robot::turn_on_robot():Sampling_Time(0),Power_voltage(0)
   private_nh.param<int>("serial_baud_rate", serial_baud_rate, 115200); //和下位机底层波特率115200 不建议更高的波特率了
   private_nh.param<std::string>("smoother_cmd_vel", smoother_cmd_vel, "/smoother_cmd_vel");//平滑控制指令 
   private_nh.param<std::string>("robot_frame_id", robot_frame_id, "base_link");//ID
-  private_nh.param<int>("product_number", product_number,0);//
   //发布3个话题，订阅2个话题
   voltage_publisher = n.advertise<std_msgs::Float32>("/PowerVoltage", 10);//电池电压数据发布
-  odom_publisher = n.advertise<nav_msgs::Odometry>("odom", 50);//里程计数据发布，robot_pose_ekf接收
-  imu_publisher  = n.advertise<sensor_msgs::Imu>("/mobile_base/sensors/imu_data", 20);//IMU数据发布，robot_pose_ekf接收
-
-  //直接由这里订阅速度和角速度信息，然后向下发送车辆的控制指令，Vx  Vy  Wz
-  Cmd_Vel_Sub = n.subscribe("/cmd_vel", 100, &turn_on_robot::Cmd_Vel_Callback, this);//因为官方的平滑包只支持X和W，没有Y，所以这里不使用平滑包
- //Cmd_Vel_Sub = n.subscribe(smoother_cmd_vel, 100, &turn_on_robot::Cmd_Vel_Callback, this);//订阅smoother_cmd_vel话题并控制机器人//差速 
+  odom_publisher = n.advertise<nav_msgs::Odometry>("odom", 50);//里程计数据发布
+  imu_publisher  = n.advertise<sensor_msgs::Imu>("/mobile_base/sensors/imu_data", 20);//IMU数据发布
+   Cmd_Vel_Sub = n.subscribe("/cmd_vel", 100, &turn_on_robot::Cmd_Vel_Callback, this);//因为官方的平滑包只支持X和W，没有Y，所以这里不使用平滑包
+  //Cmd_Vel_Sub = n.subscribe(smoother_cmd_vel, 100, &turn_on_robot::Cmd_Vel_Callback, this);//订阅smoother_cmd_vel话题并控制机器人//差速 
   Amcl_Sub = n.subscribe("/amcl_pose", 100, &turn_on_robot::Cmd_Amclvel_Callback, this);//自适应蒙特卡洛定位需要的数据
   ROS_INFO_STREAM("Data ready");//ready显示状态
   //初始化串口

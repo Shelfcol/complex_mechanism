@@ -85,7 +85,7 @@ typedef struct
 } amcl_hyp_t;
 
 static double
-normalize(double z)//½«½Ç¶È·¶Î§ÏŞÖÆÔÚ-pi~pi
+normalize(double z)//ï¿½ï¿½ï¿½Ç¶È·ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-pi~pi
 {
 	return atan2(sin(z), cos(z));
 }
@@ -289,6 +289,7 @@ void sigintHandler(int sig)
 int
 main(int argc, char** argv)
 {
+	ROS_WARN("amcl  START ...............");
 	ros::init(argc, argv, "amcl");
 	ros::NodeHandle nh;
 
@@ -300,7 +301,7 @@ main(int argc, char** argv)
 
 	if (argc == 1)
 	{
-		// run using ROS input£¬ÎÒÃÇÕâ¸öÏîÄ¿¿Ï¶¨ÊÇÖ±½ÓÓÃgrosÊäÈë
+		// run using ROS inputï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½Ï¶ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½grosï¿½ï¿½ï¿½ï¿½
 		ros::spin();
 	}
 	else if ((argc >= 3) && (std::string(argv[1]) == "--run-from-bag"))
@@ -395,7 +396,7 @@ AmclNode::AmclNode() :
 		laser_model_type_ = LASER_MODEL_LIKELIHOOD_FIELD;
 	}
 
-	private_nh_.param("odom_model_type", tmp_model_type, std::string("diff"));
+	private_nh_.param("odom_model_type", tmp_model_type, std::string("omni--corrected"));
 	if (tmp_model_type == "diff")
 		odom_model_type_ = ODOM_MODEL_DIFF;
 	else if (tmp_model_type == "omni")
@@ -438,7 +439,7 @@ AmclNode::AmclNode() :
 	tfb_ = new tf::TransformBroadcaster();
 	tf_ = new TransformListenerWrapper();
 
-	pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 2, true);
+	pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 2, true);//å‘é€å…¨å±€å®šä½ä¿¡æ¯ç»™robot
 	particlecloud_pub_ = nh_.advertise<geometry_msgs::PoseArray>("particlecloud", 2, true);
 	global_loc_srv_ = nh_.advertiseService("global_localization",
 		&AmclNode::globalLocalizationCallback,
@@ -617,7 +618,7 @@ void AmclNode::reconfigureCB(AMCLConfig &config, uint32_t level)
 	laser_scan_filter_->registerCallback(boost::bind(&AmclNode::laserReceived,
 		this, _1));
 
-	initial_pose_sub_ = nh_.subscribe("initialpose", 2, &AmclNode::initialPoseReceived, this);//¶©ÔÄ³õÊ¼Î»×Ë
+	initial_pose_sub_ = nh_.subscribe("initialpose", 2, &AmclNode::initialPoseReceived, this);//ï¿½ï¿½ï¿½Ä³ï¿½Ê¼Î»ï¿½ï¿½
 }
 
 
@@ -736,6 +737,7 @@ void AmclNode::savePoseToServer()
 		last_published_pose.pose.covariance[6 * 5 + 5]);
 }
 
+//è®¾ç½®åˆå§‹å€¼çš„èŠ‚ç‚¹
 void AmclNode::updatePoseFromServer()
 {
 	init_pose_[0] = 0.0;
@@ -776,6 +778,10 @@ void AmclNode::updatePoseFromServer()
 		init_cov_[2] = tmp_pos;
 	else
 		ROS_WARN("ignoring NAN in initial covariance AA");
+
+	ROS_WARN("initial pos X=%f, Y=%f, W=%f ", init_pose_[0], init_pose_[1], init_pose_[2]);
+	ROS_WARN("initial pos X=%f, Y=%f, W=%f ", init_pose_[0], init_pose_[1], init_pose_[2]);
+	ROS_WARN("initial pos X=%f, Y=%f, W=%f ", init_pose_[0], init_pose_[1], init_pose_[2]);
 }
 
 void
@@ -973,6 +979,7 @@ AmclNode::getOdomPose(tf::Stamped<tf::Pose>& odom_pose,
 	double& x, double& y, double& yaw,
 	const ros::Time& t, const std::string& f)
 {
+	
 	// Get the robot's pose
 	tf::Stamped<tf::Pose> ident(tf::Transform(tf::createIdentityQuaternion(),
 		tf::Vector3(0, 0, 0)), t, f);
@@ -1067,10 +1074,11 @@ AmclNode::setMapCallback(nav_msgs::SetMap::Request& req,
 	res.success = true;
 	return true;
 }
-
+//æ”¶åˆ°æ¿€å…‰é›·è¾¾æ•°æ®ä¹‹åè¿›è¡Œamclçš„è®¡ç®—ï¼Œç„¶åå°†å®šä½ç»“æœå‘ç»™robot
 void
 AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
 {
+	ROS_INFO("ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!ï¼!amcl receive laser");
 	last_laser_received_ts_ = ros::Time::now();
 	if (map_ == NULL) {
 		return;
@@ -1262,7 +1270,7 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
 
 		pf_odom_pose_ = pose;
 
-		// Resample the particles
+		// Resample the particles ç²’å­é‡é‡‡æ ·
 		if (!(++resample_count_ % resample_interval_))
 		{
 			pf_update_resample(pf_);
@@ -1368,6 +1376,7 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
 			   puts("");
 			   }
 			 */
+			ROS_INFO("ï¼!ï¼!ï¼!ï¼!ï¼amcl node   x=%d, y=%d, z=%d", p.pose.pose.position.x, p.pose.pose.position.y, p.pose.pose.position.z);
 
 			pose_pub_.publish(p);
 			last_published_pose = p;
@@ -1454,15 +1463,15 @@ AmclNode::getYaw(tf::Pose& t)
 	return yaw;
 }
 
-//ÊÕµ½³õÊ¼Î»×ËµÄÏûÏ¢
+//ï¿½Õµï¿½ï¿½ï¿½Ê¼Î»ï¿½Ëµï¿½ï¿½ï¿½Ï¢
 void
 AmclNode::initialPoseReceived(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 {
-	ROS_INFO("receive amcl initial pose£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡");
+	ROS_INFO("receive amcl initial poseï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 	handleInitialPoseMessage(*msg);
 }
 
-//´¦Àí³õÊ¼Î»×ËÏûÏ¢
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½ï¿½ï¿½Ï¢
 
 void
 AmclNode::handleInitialPoseMessage(const    geometry_msgs::PoseWithCovarianceStamped& msg)
