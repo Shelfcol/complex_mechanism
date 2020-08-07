@@ -22,7 +22,8 @@
 #include <string>
 #include <tf/transform_listener.h>
 #include <vector>
-
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 using namespace std;
 
 class TargetPlanner
@@ -32,19 +33,6 @@ public:
 	{
 		float fx;
 		float fy;
-	};
-
-	struct map_point
-	{
-		int nx;
-		int ny;
-	};
-
-	struct state
-	{
-		float fx;
-		float fy;
-		float fyaw;
 	};
 
 public:
@@ -74,6 +62,7 @@ private:
 	ros::Publisher pub_target;
 	ros::Publisher bound_box_pub;
 	ros::Publisher target_point_pub_;
+	ros::Publisher pub_targets;
 	/**
      * @brief 地图信息相关
      */
@@ -110,6 +99,7 @@ private:
 
 	//每收到一次amcl发过来的全局位置，则计算发送的target序号，然后将target发送出去
 	void getCarPos(const geometry_msgs::PoseWithCovarianceStampedConstPtr &Pose);
+	void visualize_targets();
 };
 
 //-------------------------------------------------------------
@@ -132,6 +122,7 @@ TargetPlanner::TargetPlanner(ros::NodeHandle &node_handle, string &frame_id)
 	sub_amcl = nh.subscribe("/amcl_pose", 100, &TargetPlanner::getCarPos, this);
 	pub_target = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, true);
 	bound_box_pub = nh.advertise<geometry_msgs::PolygonStamped>("/bound_box", 1, true);
+	pub_targets = nh.advertise<visualization_msgs::MarkerArray>("pub_gravity_point", 10);
 	last = ros::Time::now();
 	get_map = false;
 	if_calc_targets = false;
@@ -241,9 +232,9 @@ void TargetPlanner::calc_targets()
 	if (targets_size > 1)
 	{
 		//计算targets的朝向角，第一个点的朝向为随机，后面每个点的朝向为其前一个点指向此点的方向
-		for (int i = 1; i < targets.size(); ++i)
+		for (int i = 0; i < targets.size() - 1; ++i)
 		{
-			double yaw = atan2(targets[i].pose.position.y - targets[i - 1].pose.position.y, targets[i].pose.position.x - targets[i - 1].pose.position.x);
+			double yaw = atan2(targets[i + 1].pose.position.y - targets[i ].pose.position.y, targets[i+1].pose.position.x - targets[i].pose.position.x);
 			//std::cout << "yaw=" << yaw << std::endl;
 
 			geometry_msgs::Quaternion q = tf::createQuaternionMsgFromYaw(yaw); //只通过y即绕z的旋转角度计算四元数，用于平面
@@ -316,6 +307,69 @@ void TargetPlanner::getCarPos(const geometry_msgs::PoseWithCovarianceStampedCons
 	{
 		if_arrive_target(); //判断发送的点的序号，并将点发出去
 		pubBoundBox();
+		visualize_targets();
+	}
+}
+
+void TargetPlanner::visualize_targets()
+{
+	visualization_msgs::MarkerArray marker_array;
+
+	visualization_msgs::Marker bbox_marker;
+	bbox_marker.header.frame_id = msFrame_id;
+	bbox_marker.header.stamp = ros::Time::now();
+	bbox_marker.ns = "";
+	bbox_marker.color.r = 0.3f;
+	bbox_marker.color.g = 0.1f;
+	bbox_marker.color.b = 1.0f;
+	bbox_marker.color.a = 0.8;
+	bbox_marker.lifetime = ros::Duration();
+	bbox_marker.frame_locked = true;
+	bbox_marker.type = visualization_msgs::Marker::ARROW;
+	bbox_marker.action = visualization_msgs::Marker::ADD;
+
+	int marker_id = 0;
+	for (size_t i = 0; i < targets.size(); ++i)
+	{
+
+		bbox_marker.id = marker_id;
+		bbox_marker.pose.position.x = targets[i].pose.position.x;
+		bbox_marker.pose.position.y = targets[i].pose.position.y;
+		bbox_marker.pose.position.z = targets[i].pose.position.z;
+		bbox_marker.pose.orientation.x = targets[i].pose.orientation.x;
+		bbox_marker.pose.orientation.y = targets[i].pose.orientation.y;
+		bbox_marker.pose.orientation.z = targets[i].pose.orientation.z;
+		bbox_marker.pose.orientation.w = targets[i].pose.orientation.w;
+
+		bbox_marker.scale.x = 0.4; //长
+		bbox_marker.scale.y = 0.08;
+		bbox_marker.scale.z = 0.1;
+		marker_array.markers.push_back(bbox_marker);
+		++marker_id;
+	}
+	static int max_marker_size_ = 0;
+	if (marker_array.markers.size() > max_marker_size_)
+	{
+		max_marker_size_ = marker_array.markers.size();
+	}
+	for (size_t i = marker_id; i < max_marker_size_; ++i)
+	{
+		bbox_marker.id = i;
+		bbox_marker.color.a = 0;
+		bbox_marker.pose.position.x = 0;
+		bbox_marker.pose.position.y = 0;
+		bbox_marker.pose.position.z = 0;
+		bbox_marker.scale.x = 0;
+		bbox_marker.scale.y = 0;
+		bbox_marker.scale.z = 0;
+		marker_array.markers.push_back(bbox_marker);
+		++marker_id;
+	}
+	pub_targets.publish(marker_array);
+
+	while (marker_array.markers.size() > 0)
+	{
+		marker_array.markers.pop_back();
 	}
 }
 

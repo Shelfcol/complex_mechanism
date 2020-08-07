@@ -1,9 +1,9 @@
 disinfect_radius: 1.0
-disinfect_reso: 1.0
-x_min: 0.0
+disinfect_reso: 1.9
+x_min: -0.3
 x_max: 3.0
 y_min: 0.0
-y_max: 5.0
-min_dist2target: 0.5
+y_max: 6.7
+min_dist2target: 0.92
 max_waiting_time: 60.0
 
