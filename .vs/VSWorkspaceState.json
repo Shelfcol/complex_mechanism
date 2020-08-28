@@ -4,12 +4,10 @@
     "\\navigation",
     "\\navigation\\amcl",
     "\\navigation\\amcl\\cfg",
-    "\\navigation\\amcl\\include\\amcl",
-    "\\navigation\\amcl\\include\\amcl\\map",
-    "\\navigation\\amcl\\include\\amcl\\pf",
-    "\\navigation\\amcl\\include\\amcl\\sensors",
-    "\\navigation\\amcl\\src"
+    "\\navigation\\amcl\\src",
+    "\\teb_local_planner",
+    "\\teb_local_planner\\src"
   ],
-  "SelectedNode": "\\navigation\\amcl\\cfg\\AMCL.cfg",
+  "SelectedNode": "\\navigation\\amcl\\src\\amcl_node.cpp",
   "PreviewInSolutionExplorer": false
 }
