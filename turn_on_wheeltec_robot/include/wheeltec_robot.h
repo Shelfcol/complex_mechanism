@@ -42,13 +42,13 @@ const double odom_pose_covariance[36] = {1e-3, 0, 0, 0, 0, 0,
 										0, 0, 1e6, 0, 0, 0,
 										0, 0, 0, 1e6, 0, 0,
 										0, 0, 0, 0, 1e6, 0,
-										0, 0, 0, 0, 0, 1e3};///<里程计位姿得协方差矩阵，和turtlebot_node/covariances.py设置一样。航向分量方差小，姿态分量相差大。所以EKF融合时姿态分量更相信IMU。小车运动时更相信odom
+										0, 0, 0, 0, 0, 1e3};
 const double odom_pose_covariance2[36] = {1e-9, 0, 0, 0, 0, 0, 
 										0, 1e-3, 1e-9, 0, 0, 0,
 										0, 0, 1e6, 0, 0, 0,
 										0, 0, 0, 1e6, 0, 0,
 										0, 0, 0, 0, 1e6, 0,
-										0, 0, 0, 0, 0, 1e-9};///<里程计位姿得协方差平方矩阵
+										0, 0, 0, 0, 0, 1e-9};
  
 const double odom_twist_covariance[36] = {1e-3, 0, 0, 0, 0, 0, 
 										0, 1e-3, 0, 0, 0, 0,
@@ -132,7 +132,6 @@ class turn_on_robot
        	Vel_Pos_Data Robot_Pos;//机器人的位置
         Vel_Pos_Data Robot_Vel;//机器人的速度
 		int serial_baud_rate;//波特率
-		int product_number;//产品名称
 		string usart_port_name, robot_frame_id, smoother_cmd_vel;
 		ros::NodeHandle n;//创建句柄
 		ros::Time _Now, _Last_Time;//时间相关
